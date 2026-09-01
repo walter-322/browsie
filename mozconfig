@@ -1,0 +1,20 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Use our custom branding instead of official Firefox branding
+ac_add_options --with-branding=browser/branding/unofficial
+
+# App identity — matches configure.sh values
+ac_add_options --with-app-name=browsie
+ac_add_options --with-app-basename=Browsie
+
+# Build into a distinctly-named object directory
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-browsie
+
+# Speed up rebuilds in CI via sccache
+ac_add_options --with-ccache=sccache
+
+# Release-style optimized build (not a debug build)
+ac_add_options --enable-optimize
+ac_add_options --disable-debug
