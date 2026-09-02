@@ -16,7 +16,7 @@ jobs:
             artifact-path: obj-*/dist/*.tar.bz2
           - os: windows-latest
             artifact-name: browsie-windows
-            artifact-path: obj-*/dist/install/sea/*.exe
+            artifact-path: obj-*/dist/**/*.exe
     runs-on: ${{ matrix.os }}
     timeout-minutes: 350
     steps:
@@ -50,13 +50,18 @@ jobs:
             sccache-${{ runner.os }}-
 
       - name: Bootstrap build deps
-        run: ./mach --no-interactive bootstrap --application-choice=browser
+        timeout-minutes: 20
+        run: yes | ./mach --no-interactive bootstrap --application-choice=browser --vcs=git
 
       - name: Build
         run: ./mach build
 
       - name: Package
         run: ./mach package
+
+      - name: List package output (debug)
+        shell: bash
+        run: find obj-* -iname "*.exe" -o -iname "*.msi" -o -iname "*.zip" -o -iname "*.tar.bz2" 2>/dev/null || true
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
