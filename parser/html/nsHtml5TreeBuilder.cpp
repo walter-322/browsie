@@ -1270,7 +1270,9 @@ starttagloop:
               if (nsHtml5TreeBuilder::NOT_FOUND_ON_STACK !=
                   findLastInScope(nsGkAtoms::nobr)) {
                 errFooSeenWhenFooOpen(name);
-                adoptionAgencyEndTag(nsGkAtoms::nobr);
+                if (!adoptionAgencyEndTag(nsGkAtoms::nobr)) {
+                  anyOtherEndTagInBody(nsGkAtoms::nobr);
+                }
                 reconstructTheActiveFormattingElements();
               }
               appendToCurrentNodeAndPushFormattingElementMayFoster(elementName,
@@ -2826,28 +2828,8 @@ void nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName) {
             [[fallthrough]];
           }
           default: {
-            if (isCurrent(name)) {
-              pop();
-              NS_HTML5_BREAK(endtagloop);
-            }
-            eltPos = currentPtr;
-            for (;;) {
-              nsHtml5StackNode* node = stack[eltPos];
-              if (node->ns == kNameSpaceID_XHTML && node->name == name) {
-                generateImpliedEndTags();
-                if (!!MOZ_UNLIKELY(mViewSource) && !isCurrent(name)) {
-                  errUnclosedElements(eltPos, name);
-                }
-                while (currentPtr >= eltPos) {
-                  pop();
-                }
-                NS_HTML5_BREAK(endtagloop);
-              } else if (!eltPos || node->isSpecial()) {
-                errStrayEndTag(name);
-                NS_HTML5_BREAK(endtagloop);
-              }
-              eltPos--;
-            }
+            anyOtherEndTagInBody(name);
+            NS_HTML5_BREAK(endtagloop);
           }
         }
         [[fallthrough]];
@@ -3557,6 +3539,31 @@ void nsHtml5TreeBuilder::removeFromListOfActiveFormattingElements(int32_t pos) {
                               listPtr - pos);
   MOZ_ASSERT(debugOnlyClearLastListSlot());
   listPtr--;
+}
+
+void nsHtml5TreeBuilder::anyOtherEndTagInBody(nsAtom* name) {
+  if (isCurrent(name)) {
+    pop();
+    return;
+  }
+  int32_t eltPos = currentPtr;
+  for (;;) {
+    nsHtml5StackNode* node = stack[eltPos];
+    if (node->ns == kNameSpaceID_XHTML && node->name == name) {
+      generateImpliedEndTags();
+      if (!!MOZ_UNLIKELY(mViewSource) && !isCurrent(name)) {
+        errUnclosedElements(eltPos, name);
+      }
+      while (currentPtr >= eltPos) {
+        pop();
+      }
+      return;
+    } else if (!eltPos || node->isSpecial()) {
+      errStrayEndTag(name);
+      return;
+    }
+    eltPos--;
+  }
 }
 
 bool nsHtml5TreeBuilder::adoptionAgencyEndTag(nsAtom* name) {

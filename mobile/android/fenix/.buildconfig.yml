@@ -52,6 +52,7 @@ projects:
     - components:feature-importer
     - components:feature-intent
     - components:feature-ipprotection
+    - components:feature-listentopage
     - components:feature-logins
     - components:feature-media
     - components:feature-password-importer

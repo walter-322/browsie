@@ -526,10 +526,28 @@ export class UrlbarResult {
    * Reconstructs a UrlbarResult from the plain object produced by toWire(),
    * e.g. after it has crossed the Urlbar actor boundary.
    *
+   * Structured clone strips data that doesn't survive it (e.g. a Rust
+   * suggestion's UniFFI `Suggestion` class), so a reconstruction is a lossy
+   * object distinct from the one that was serialized. Where the originals are
+   * still around -- the parent's own query results -- pass them as
+   * `liveResults` to get the original back instead, carrying over the
+   * view-assigned `rowIndex` the wire preserves (the original never went
+   * through a view).
+   *
    * @param {object} wire The wire representation from toWire().
-   * @returns {UrlbarResult} The reconstructed result.
+   * @param {?UrlbarResult[]} [liveResults] Results to match `wire` against by id.
+   * @returns {UrlbarResult} The matching result from `liveResults`, else the
+   *   reconstruction.
    */
-  static fromWire(wire) {
+  static fromWire(wire, liveResults = null) {
+    let liveResult = liveResults?.find(r => r.id === wire.id);
+    if (liveResult) {
+      if (wire.rowIndex != null) {
+        liveResult.rowIndex = wire.rowIndex;
+      }
+      return liveResult;
+    }
+
     let result = new UrlbarResult({ ...wire, skipPayloadValidation: true });
     // The following aren't constructor parameters, so re-apply them.
     result.providerType = wire.providerType;

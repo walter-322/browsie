@@ -414,8 +414,8 @@ export class AmpSuggestions extends SuggestProvider {
       isClicked:
         // `selType` == "quicksuggest" if the result itself was clicked. It will
         // be a command name if a command was clicked, e.g., "dismiss". Match by
-        // id: on the message path the visible result and the picked result are
-        // reconstructed as distinct objects.
+        // id: the visible result and the picked result aren't necessarily the
+        // same object.
         result.id == details.result?.id && details.selType == "quicksuggest",
       reportingUrl: result.payload.sponsoredImpressionUrl,
     });

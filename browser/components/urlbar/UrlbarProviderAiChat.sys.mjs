@@ -8,6 +8,7 @@
 import {
   SkippableTimer,
   UrlbarProvider,
+  UrlbarUtils,
 } from "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs";
 
 const lazy = {};
@@ -104,10 +105,11 @@ export class UrlbarProviderAiChat extends UrlbarProvider {
    *   The query context object
    * @param {(provider: UrlbarProvider, result: UrlbarResult) => void} addCallback
    *   Callback invoked by the provider to add a new result.
+   * @param {UrlbarParentController} controller The controller instance.
    * @returns {Promise<void>}
    * @abstract
    */
-  async startQuery(queryContext, addCallback) {
+  async startQuery(queryContext, addCallback, controller) {
     let instance = this.queryInstance;
     let canReturnHeuristicResult = queryContext.sapName != "urlbar";
 
@@ -155,7 +157,7 @@ export class UrlbarProviderAiChat extends UrlbarProvider {
       let engine = lazy.UrlbarSearchUtils.getDefaultEngine(
         queryContext.isPrivate
       );
-      let icon = await engine.getIconURL();
+      let icon = await UrlbarUtils.getEngineIconUrl(engine, controller);
       if (instance != this.queryInstance) {
         return;
       }

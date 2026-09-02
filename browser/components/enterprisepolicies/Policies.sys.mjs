@@ -27,6 +27,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  HomePage: "resource:///modules/HomePage.sys.mjs",
   ProxyPolicies: "resource:///modules/policies/ProxyPolicies.sys.mjs",
   SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
   QuickSuggest: "moz-src:///browser/components/urlbar/QuickSuggest.sys.mjs",
@@ -2161,6 +2162,26 @@ export var Policies = {
   },
 
   Homepage: {
+    // People set URL to a pipe-separated list, the way
+    // |browser.startup.homepage| stores it. Additional does the same thing,
+    // so move the extra ones there.
+    migrateLegacySyntax(param) {
+      if (typeof param?.URL != "string" || !param.URL.includes("|")) {
+        return param;
+      }
+      const [url, ...additional] = lazy.HomePage.parseCustomHomepageURLs(
+        param.URL
+      );
+      if (!url) {
+        return param;
+      }
+      return {
+        ...param,
+        URL: url,
+        Additional: [...additional, ...(param.Additional ?? [])],
+      };
+    },
+
     onBeforeUIStartup(manager, param) {
       if ("StartPage" in param && param.StartPage == "none") {
         // For blank startpage, we use about:blank rather

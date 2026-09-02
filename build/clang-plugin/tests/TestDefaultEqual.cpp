@@ -37,8 +37,8 @@ template <class T> struct E {
   }
 };
 
-struct F { // expected-error {{has a defaulted 'equal' operator but a non-defaulted 'not equal' operator}}
+struct F {
   int x, y;
   bool operator==(const F &other) const = default;
-  bool operator!=(const F &other) const { return !(*this == other); }
+  bool operator!=(const F &other) const { return !(*this == other); } // expected-error {{'not equal' operator is redundant with defaulted 'equal' operator}}
 };

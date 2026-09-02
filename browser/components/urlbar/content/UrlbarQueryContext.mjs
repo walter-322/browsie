@@ -476,7 +476,7 @@ export class UrlbarQueryContext {
    */
   static fromWire(wire) {
     Object.setPrototypeOf(wire, UrlbarQueryContext.prototype);
-    wire.results = wire.results?.map(UrlbarResult.fromWire) ?? [];
+    wire.results = wire.results?.map(r => UrlbarResult.fromWire(r)) ?? [];
     if (wire.heuristicResult) {
       wire.heuristicResult = UrlbarResult.fromWire(wire.heuristicResult);
     }

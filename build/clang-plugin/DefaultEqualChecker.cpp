@@ -13,14 +13,15 @@ void DefaultEqualChecker::registerMatchers(MatchFinder *AstMatcher) {
                     hasBody(compoundStmt(statementCountIs(1)).bind("body")))
           .bind("operator"),
       this);
+
   // matcher for inequality operator
   AstMatcher->addMatcher(
-      cxxRecordDecl(hasMethod(cxxMethodDecl(hasOverloadedOperatorName("=="),
-                                            isDefaulted())),
-                    hasMethod(cxxMethodDecl(isDefinition(), isFirstParty(),
-                                            hasOverloadedOperatorName("!="),
-                                            isConst(), unless(isDefaulted()))
-                                  .bind("neq")))
+      cxxRecordDecl(
+          hasMethod(
+              cxxMethodDecl(hasOverloadedOperatorName("=="), isDefaulted())),
+          hasMethod(cxxMethodDecl(isDefinition(), isFirstParty(),
+                                  hasOverloadedOperatorName("!="), isConst())
+                        .bind("neq")))
           .bind("record"),
       this);
 }
@@ -52,9 +53,10 @@ void DefaultEqualChecker::check(const MatchFinder::MatchResult &Result) {
     const CXXMethodDecl *MD = Result.Nodes.getNodeAs<CXXMethodDecl>("neq");
     if (!hasDefaultCompareOperatorSignature(MD, RD))
       return;
-    diag(RD->getBeginLoc(),
-         "has a defaulted 'equal' operator but a non-defaulted 'not equal' "
-         "operator",
+    StringRef Filename =
+        getFilename(Result.Context->getSourceManager(), MD->getBeginLoc());
+    diag(MD->getBeginLoc(),
+         "'not equal' operator is redundant with defaulted 'equal' operator",
          DiagnosticIDs::Error);
     return;
   }
@@ -66,8 +68,6 @@ void DefaultEqualChecker::check(const MatchFinder::MatchResult &Result) {
   // Skiplist {
   StringRef Filename =
       getFilename(Result.Context->getSourceManager(), MD->getBeginLoc());
-  if (Filename.ends_with("pkix/Time.h"))
-    return;
   if (Filename.ends_with("ServoStyleConsts.h"))
     return;
   if (Filename.ends_with("webrender_ffi_generated.h"))

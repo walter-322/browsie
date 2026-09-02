@@ -125,6 +125,8 @@
     <string name="preferences_debug_settings_use_minimal_bottom_toolbar_while_entering_text" translatable="false">Use a minimal bottom toolbar while entering text in a website</string>
     <!-- Label for the option of using new scroll data for animating the dynamic toolbar -->
     <string name="preferences_debug_settings_use_scroll_data_for_dynamic_toolbar" translatable="false">Animate dynamic toolbars based on website scroll data</string>
+    <!-- Label for the option to show the toolbar in focus mode when clicked -->
+    <string name="preferences_debug_settings_show_toolbar_in_focus_mode" translatable="false">Enable focus mode</string>
     <!-- Label for toggling Remote Crash Pull -->
     <string name="preferences_crash_pull_never_show_again" translatable="false">Never show Crash Pull</string>
     <!-- Label for enabling the Debug Drawer -->

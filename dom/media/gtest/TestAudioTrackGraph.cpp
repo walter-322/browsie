@@ -16,6 +16,7 @@
 #include "MockCubeb.h"
 #include "WavDumper.h"
 #include "mozilla/Components.h"
+#include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/GenericFactory.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SpinEventLoopUntil.h"
@@ -23,6 +24,7 @@
 #include "mozilla/gtest/MozHelpers.h"
 #include "mozilla/gtest/WaitFor.h"
 #include "nsComponentManager.h"
+#include "nsIThreadInternal.h"
 #include "nsXPCOMPrivate.h"
 
 using namespace mozilla;
@@ -4136,6 +4138,142 @@ TEST(TestAudioTrackGraph, ShutdownMessages)
   // Ensure the stream is no longer used by its MockCubeb before releasing our
   // reference, and before the next test might ForceSetCubebContext() to
   // destroy our cubeb.
+  (void)WaitFor(destroyPromise).unwrap()[0];
+  ProcessEventQueue();
+}
+
+namespace {
+// Dispatches to the graph from a microtask. The microtask checkpoint runs
+// after XPCOMThreadWrapper::AfterProcessNextEvent has fired the tail
+// dispatcher for this turn of the event loop, so the runnable lands in a fresh
+// tail dispatcher, and will not drain before the graph processes main thread
+// updates in stable state.
+class MicroTaskDispatcher final : public MicroTaskRunnable {
+ public:
+  MicroTaskDispatcher(MediaTrackGraphImpl* aGraph, const char* aName,
+                      MockFunction<void(const char*)>& aCheckpoint)
+      : mGraph(aGraph), mName(aName), mCheckpoint(aCheckpoint) {}
+
+  MOZ_CAN_RUN_SCRIPT void Run(AutoSlowOperation&) override {
+    MOZ_ALWAYS_SUCCEEDS(mGraph->Dispatch(MakeAndAddRef<TestRunnable>(
+        mName, /*aDiscardable=*/true, mCheckpoint)));
+  }
+
+ private:
+  MediaTrackGraphImpl* const mGraph;
+  const char* const mName;
+  MockFunction<void(const char*)>& mCheckpoint;
+};
+}  // namespace
+
+// A control message queued from a microtask during the graph's forced-shutdown
+// handover stays in the tail dispatcher, since XPCOMThreadWrapper cannot fire
+// the tail dispatcher between the microtask checkpoint and stable state.
+// This test checks that the graph's stable state task drains such messages.
+TEST(TestAudioTrackGraph, TailDispatchFromMicroTaskDuringShutdown)
+{
+  MockCubeb* cubeb = new MockCubeb(MockCubeb::RunningMode::Manual);
+  CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
+
+  MediaTrackGraphImpl* graph = MediaTrackGraphImpl::GetInstance(
+      MediaTrackGraph::SYSTEM_THREAD_DRIVER, /*Window ID*/ 1,
+      CubebUtils::PreferredSampleRate(/* aShouldResistFingerprinting */ false),
+      nullptr, AbstractThread::MainThread());
+
+  RefPtr processedTrack = new MockProcessedMediaTrack(graph->GraphRate());
+
+  MockFunction<void(const char* name)> checkpoint;
+  EXPECT_CALL(*processedTrack, AddListenerImpl);
+  EXPECT_CALL(*processedTrack, ProcessInput).Times(AtLeast(1));
+  EXPECT_CALL(*processedTrack, RemoveListenerImpl);
+  {
+    InSequence s;
+    EXPECT_CALL(checkpoint, Call(StrEq("Now manual")));
+    EXPECT_CALL(checkpoint, Call(StrEq("Forced shutdown")));
+    EXPECT_CALL(checkpoint, Call(StrEq("Before main thread cleanup")));
+    EXPECT_CALL(checkpoint, Call(StrEq("After main thread cleanup")));
+
+    // Both of these TestRunnables were queued from a microtask, i.e. after the
+    // tail dispatcher had fired for that turn. Neither may be left in its tail
+    // dispatcher.
+    EXPECT_CALL(checkpoint, Call(StrEq("MicroTask_OnShutdown::OnDiscard")));
+    EXPECT_CALL(checkpoint, Call(StrEq("~MicroTask_OnShutdown")));
+    EXPECT_CALL(checkpoint, Call(StrEq("MicroTask_AfterShutdown::OnDiscard")));
+    EXPECT_CALL(checkpoint, Call(StrEq("~MicroTask_AfterShutdown")));
+
+    EXPECT_CALL(checkpoint, Call(StrEq("Final call")));
+  }
+
+  const auto QueueMicroTaskDispatch([&](const char* aName) {
+    CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
+    MOZ_RELEASE_ASSERT(ccjs);
+    ccjs->DispatchToMicroTask(
+        MakeAndAddRef<MicroTaskDispatcher>(graph, aName, checkpoint));
+  });
+
+  RefPtr<OnFallbackListener> fallbackListener;
+  DispatchFunction([&] {
+    graph->AddTrack(processedTrack);
+    processedTrack->AddAudioOutput(reinterpret_cast<void*>(1), nullptr);
+    fallbackListener = new OnFallbackListener(processedTrack);
+    processedTrack->AddListener(fallbackListener);
+  });
+
+  RefPtr<SmartMockCubebStream> stream = WaitFor(cubeb->StreamInitEvent());
+  while (stream->State().isNothing()) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+  EXPECT_EQ(*stream->State(), CUBEB_STATE_STARTED);
+  DispatchFunction([&] {
+    while (fallbackListener->OnFallback()) {
+      EXPECT_EQ(stream->ManualDataCallback(WEBAUDIO_BLOCK_SIZE),
+                MockCubebStream::KeepProcessing::Yes);
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    checkpoint.Call("Now manual");
+  });
+
+  auto destroyPromise = TakeN(cubeb->StreamDestroyEvent(), 1);
+  DispatchFunction([&] { graph->ForceShutDown(); });
+
+  DispatchFunction([&] {
+    // Process the ForceShutdown message.
+    EXPECT_EQ(stream->ManualDataCallback(0),
+              MockCubebStream::KeepProcessing::No);
+    checkpoint.Call("Forced shutdown");
+  });
+
+  // The control message dispatched from this microtask will be handled in the
+  // main-thread-cleanup stable state runnable.
+  DispatchFunction([&] {
+    QueueMicroTaskDispatch("MicroTask_OnShutdown");
+    checkpoint.Call("Before main thread cleanup");
+    // As this function exits, the event loop runs the microtask checkpoint,
+    // which dispatches the MicroTask_OnShutdown runnable to the graph. It only
+    // reaches the tail dispatcher, which fires in the event loop's next
+    // OnProcessNextEvent event, i.e. after "After main thread cleanup". The
+    // tail dispatcher firing posts the stable state runnable, which runs after
+    // the second microtask. This is why MicroTask_OnShutdown is expected to be
+    // processed after the "After main thread cleanup" event.
+
+    // Note that the graph processing the forced shutdown queued a regular
+    // runnable to the main thread, to queue the stable state runnable. It gets
+    // queued after all the other tasks already queued in the test and is
+    // therefore irrelevant.
+  });
+
+  DispatchFunction([&] {
+    checkpoint.Call("After main thread cleanup");
+    QueueMicroTaskDispatch("MicroTask_AfterShutdown");
+  });
+
+  DispatchFunction([&] {
+    processedTrack->RemoveListener(fallbackListener);
+    processedTrack->Destroy();
+  });
+
+  DispatchFunction([&] { checkpoint.Call("Final call"); });
+
   (void)WaitFor(destroyPromise).unwrap()[0];
   ProcessEventQueue();
 }

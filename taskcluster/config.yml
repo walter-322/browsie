@@ -254,6 +254,7 @@ treeherder:
         'fenix-beta': 'Fenix beta-related tasks'
         'fenix-debug': 'Fenix builds made for testing'
         'fenix-nightly': 'Fenix nightly-related tasks'
+        'fenix-nightly-nobp': 'Fenix nightly builds without baseline profiles'
         'fenix-nightlySim': 'Nightly-related tasks that run on each github push'
         'fenix-release': 'Fenix production-related tasks'
 

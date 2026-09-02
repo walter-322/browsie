@@ -17,7 +17,6 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AppAndSystemHelper.openAppFromExternalLink
 import org.mozilla.fenix.helpers.DataGenerationHelper.createCustomTabIntent
 import org.mozilla.fenix.helpers.FenixTestRule
-import org.mozilla.fenix.helpers.FxNimbusHelper
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
@@ -99,7 +98,6 @@ class CustomTabsTest {
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2334762
     @Test
     fun copyCustomTabToolbarUrlTest() {
-        FxNimbusHelper.updateAddressBarFocusModeStatus(false)
         val customTabPage = mockWebServer.getGenericAsset(1)
 
         intentReceiverActivityTestRule.launchActivity(
@@ -119,33 +117,6 @@ class CustomTabsTest {
         browserScreen(composeTestRule) {}
             .openSearch {
                 clickClearButton()
-                longClickToolbar()
-                clickPasteText()
-                verifyTypedToolbarText(customTabPage.url.toString(), exists = true)
-            }
-    }
-
-    @Test
-    fun copyCustomTabToolbarUrlWithinAddressBarInFocusedModeTest() {
-        FxNimbusHelper.updateAddressBarFocusModeStatus(false)
-        val customTabPage = mockWebServer.getGenericAsset(1)
-
-        intentReceiverActivityTestRule.launchActivity(
-            createCustomTabIntent(
-                customTabPage.url.toString(),
-                customMenuItem,
-            )
-        )
-
-        customTabScreen(composeTestRule) {
-            verifyCustomTabUrl(customTabPage.url.toString())
-            longClickAndCopyToolbarUrl()
-        }
-
-        openAppFromExternalLink(composeTestRule, customTabPage.url.toString())
-
-        browserScreen(composeTestRule) {}
-            .openSearch {
                 longClickToolbar()
                 clickPasteText()
                 verifyTypedToolbarText(customTabPage.url.toString(), exists = true)

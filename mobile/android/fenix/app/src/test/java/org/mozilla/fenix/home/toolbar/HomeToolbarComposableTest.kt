@@ -9,6 +9,7 @@ import android.content.pm.ActivityInfo
 import android.content.pm.ResolveInfo
 import android.speech.RecognizerIntent
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -20,7 +21,6 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -30,8 +30,7 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.home.toolbar.HomeToolbarComposable.Companion.DirectToSearchConfig
-import org.mozilla.fenix.nimbus.AddressbarFocusMode
-import org.mozilla.fenix.nimbus.FxNimbus
+import org.mozilla.fenix.utils.Settings
 import org.robolectric.shadows.ShadowPackageManager
 
 @RunWith(AndroidJUnit4::class)
@@ -41,11 +40,6 @@ class HomeToolbarComposableTest {
     val browserStore = BrowserStore()
     val toolbarStore = BrowserToolbarStore()
     val dispatcher = StandardTestDispatcher()
-
-    @After
-    fun teardown() {
-        FxNimbus.features.addressbarFocusMode.withCachedValue(null)
-    }
 
     @Test
     fun `GIVEN speech recognition is available WHEN should start to a voice search THEN start voice recognition and then search mode`() =
@@ -96,7 +90,10 @@ class HomeToolbarComposableTest {
 
     @Test
     fun `GIVEN a specific tab WHEN should start a typed search from it THEN enter search mode with tab's URL prefilled`() {
-        FxNimbus.features.addressbarFocusMode.withCachedValue(AddressbarFocusMode(enabled = false))
+        val settings: Settings =
+            mockk(relaxed = true) {
+                every { showAddressBarInFocusMode } returns false
+            }
         val tab = createTab("https://test.com")
         val browserStore = BrowserStore(BrowserState(tabs = listOf(tab)))
         val htc =
@@ -109,6 +106,7 @@ class HomeToolbarComposableTest {
                         source = MetricsUtils.Source.ACTION,
                     ),
                 browserStore = browserStore,
+                settings = settings,
             )
 
         htc.build(false)
@@ -123,7 +121,10 @@ class HomeToolbarComposableTest {
 
     @Test
     fun `GIVEN addressbar focus mode is enabled WHEN should start a typed search from a tab THEN don't prefill its URL`() {
-        FxNimbus.features.addressbarFocusMode.withCachedValue(AddressbarFocusMode(enabled = true))
+        val settings: Settings =
+            mockk(relaxed = true) {
+                every { showAddressBarInFocusMode } returns true
+            }
         val tab = createTab("https://test.com")
         val browserStore = BrowserStore(BrowserState(tabs = listOf(tab)))
         val htc =
@@ -136,6 +137,7 @@ class HomeToolbarComposableTest {
                         source = MetricsUtils.Source.ACTION,
                     ),
                 browserStore = browserStore,
+                settings = settings,
             )
 
         htc.build(false)
@@ -171,6 +173,7 @@ class HomeToolbarComposableTest {
     private fun buildHomeToolbarComposable(
         directToSearchConfig: DirectToSearchConfig,
         browserStore: BrowserStore = this.browserStore,
+        settings: Settings = mockk(relaxed = true),
         coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.Main),
     ) =
         HomeToolbarComposable(
@@ -180,7 +183,7 @@ class HomeToolbarComposableTest {
             appStore = appStore,
             browserStore = browserStore,
             browsingModeManager = mockk(),
-            settings = mockk(relaxed = true),
+            settings = settings,
             directToSearchConfig = directToSearchConfig,
             coroutineScope = coroutineScope,
             tabStripContent = {},

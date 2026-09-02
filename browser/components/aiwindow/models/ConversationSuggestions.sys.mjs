@@ -19,11 +19,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs",
   indexInferenceResultsById:
     "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs",
-  HISTORY:
-    "moz-src:///browser/components/aiwindow/models/memories/MemoriesConstants.sys.mjs",
   MEMORY_SENSITIVITY_CATEGORY_NOT_SENSITIVE:
-    "moz-src:///browser/components/aiwindow/models/memories/MemoriesConstants.sys.mjs",
-  SESSION:
     "moz-src:///browser/components/aiwindow/models/memories/MemoriesConstants.sys.mjs",
   MEMORY_FILTER_COMPARATOR:
     "moz-src:///browser/components/aiwindow/services/MemoryStoreConstants.sys.mjs",
@@ -559,11 +555,6 @@ export async function getMemoriesForResumeActivityConversationStarter(
       comparator: lazy.MEMORY_FILTER_COMPARATOR.EQUAL_TO,
       value: lazy.MEMORY_SENSITIVITY_CATEGORY_NOT_SENSITIVE,
     },
-    {
-      field: "sources",
-      comparator: lazy.MEMORY_FILTER_COMPARATOR.SOME,
-      value: [lazy.HISTORY, lazy.SESSION],
-    },
   ];
   let memories = await MemoriesManager.getMemoriesByAttribute(attributeFilters);
 
@@ -578,11 +569,11 @@ export async function getMemoriesForResumeActivityConversationStarter(
     return hasHistory;
   });
 
-  // Re-sort by frecency (decreasing) and updated_at (most recent first)
+  // Re-sort by created_at (most recent first)
   memories.sort(
     (a, b) =>
-      (b.frecency ?? 0) - (a.frecency ?? 0) ||
-      (b.updated_at ?? 0) - (a.updated_at ?? 0)
+      (b.created_at ?? 0) - (a.created_at ?? 0) ||
+      (b.last_merged ?? 0) - (a.last_merged ?? 0)
   );
 
   // Slice to requested count

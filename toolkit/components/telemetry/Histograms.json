@@ -2364,14 +2364,6 @@
     "bug_numbers": [1621402, 1525076, 1874944],
     "alert_emails": ["omc-core@mozilla.com"]
   },
-  "MIXED_CONTENT_PAGE_LOAD": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 4,
-    "description": "Accumulates type of content per page load (0=no mixed or non-secure page, 1=mixed passive, 2=mixed active, 3=mixed passive and mixed active)"
-  },
   "MIXED_CONTENT_HSTS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
@@ -3175,11 +3167,11 @@
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "aosmond@mozilla.com"],
     "kind": "enumerated",
     "n_values": 20,
     "releaseChannelCollection": "opt-out",
-    "description": "Reports results from the graphics sanity test to track which drivers are having problems (0=TEST_PASSED, 1=TEST_FAILED_RENDER, 2=TEST_FAILED_VIDEO, 3=TEST_CRASHED)"
+    "description": "Reports results from the graphics sanity test to track which drivers are having problems (0=TEST_PASSED, 1=TEST_FAILED_RENDER, 2=TEST_FAILED_VIDEO_DECODE, 3=TEST_CRASHED, 4=TEST_TIMEOUT, 5=TEST_FAILED_TO_RUN, 6=TEST_FAILED_VIDEO_ENCODE)"
   },
   "READER_MODE_PARSE_RESULT": {
     "record_in_processes": ["main", "content"],

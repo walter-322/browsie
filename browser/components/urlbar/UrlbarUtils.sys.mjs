@@ -38,6 +38,7 @@ const lazy = XPCOMUtils.declareLazy({
     "moz-src:///toolkit/components/search/SearchSuggestionController.sys.mjs",
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
   UrlUtils: "resource://gre/modules/UrlUtils.sys.mjs",
+  blobAsDataURL: "moz-src:///toolkit/modules/FaviconUtils.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 
@@ -46,6 +47,13 @@ const lazy = XPCOMUtils.declareLazy({
     default: true,
   },
 });
+
+/**
+ * Data URLs of engine icons, keyed by the blob URL they were read from.
+ *
+ * @type {Map<string, Promise<string|undefined>>}
+ */
+const gEngineIconDataUrls = new Map();
 
 /**
  * Parses a URL and returns the origin parts needed for moz_origins lookups.
@@ -325,6 +333,43 @@ export var UrlbarUtils = {
       });
     }
     return iconUrl;
+  },
+
+  /**
+   * Returns an engine's icon URL in a form the view can load. A config
+   * engine's icon is a blob URL, which only resolves in the process that
+   * created it, so a view in a content process gets a data URL.
+   *
+   * @param {SearchEngine} engine The engine whose icon to return.
+   * @param {UrlbarParentController} [controller]
+   *   The controller the query runs on. It supplies whether the view renders in
+   *   a content process. Omitted in unit tests.
+   * @returns {Promise<string|undefined>}
+   *   The icon URL, or undefined if the engine has no icon or its icon could
+   *   not be read.
+   */
+  async getEngineIconUrl(engine, controller) {
+    let url = await engine.getIconURL();
+    if (!url?.startsWith("blob:") || !controller?.rendersInContentProcess) {
+      return url;
+    }
+    // An engine keeps one blob URL per icon size, so it's a stable cache key
+    // that a new icon invalidates by itself.
+    let dataUrl = gEngineIconDataUrls.get(url);
+    if (!dataUrl) {
+      dataUrl = (async () => {
+        try {
+          let response = await fetch(url);
+          return await lazy.blobAsDataURL(await response.blob());
+        } catch (ex) {
+          console.error(`Could not read the icon of engine ${engine.id}`, ex);
+          gEngineIconDataUrls.delete(url);
+          return undefined;
+        }
+      })();
+      gEngineIconDataUrls.set(url, dataUrl);
+    }
+    return dataUrl;
   },
 
   /**

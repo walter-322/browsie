@@ -142,13 +142,21 @@ class NewtabTestUtils {
    * context stays in the content process; what the query produced is readable
    * through the other methods here.
    *
+   * Asserts along the way that the icon of every visible row loads.
+   *
    * @param {object} options
    *   As `UrlbarTestUtils.promiseAutocompleteResultPopup` takes them, with
    *   `browser` in place of `window`.
    * @param {MozBrowser} options.browser
+   * @param {boolean} [options.expectUnloadableIcons]
+   *   Skips the row icon check, for a query whose icons are meant not to load.
    */
-  async promiseAutocompleteResultPopup({ browser, ...options }) {
-    await this.forward(browser, "search", [options]);
+  async promiseAutocompleteResultPopup({
+    browser,
+    expectUnloadableIcons,
+    ...options
+  }) {
+    await this.forward(browser, "search", [options, expectUnloadableIcons]);
   }
 
   /**

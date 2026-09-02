@@ -2083,18 +2083,29 @@ void MediaTrackGraphImpl::RunInStableState(bool aSourceIsMTG) {
 
     if (LifecycleState() == LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP &&
         mForceShutDownReceived) {
+      // The main thread is taking over the graph thread's messages. Messages
+      // queued after the tail dispatcher last fired, e.g. from a microtask,
+      // are still held by it, so hand them over too rather than leave them to
+      // a dispatcher that may not fire again before the graph is gone.
+      if (AbstractThread* current = AbstractThread::GetCurrent()) {
+        // Unlock here because TailDispatchMessage grabs the monitor. State
+        // mutated under the monitor above is mainly mUpdateRunnables and
+        // mTrackUpdates. But we've entered forced shutdown. The graph won't
+        // iterate again, and cannot mutate those members while we're unlocked.
+        MonitorAutoUnlock unlock(mMonitor);
+        MOZ_ALWAYS_SUCCEEDS(current->TailDispatchTasksFor(this));
+      }
+      // Lifecycle state does not change while the monitor is dropped, because
+      // the graph thread is not running and TailDispatchTasksFor() does not
+      // spin nested event loops.
+      MOZ_ASSERT(LifecycleState() == LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP);
+      MOZ_ASSERT(mForceShutDownReceived);
       // Defer calls to RunDuringShutdown() to happen while mMonitor is not
       // held.
       for (auto& message : mBackMessageQueue) {
         runnablesToRunDuringShutdown.AppendElement(std::move(message));
       }
       mBackMessageQueue.Clear();
-      // The tail dispatcher must have fired before stable state to drain the
-      // tail tasks. There's a theoretical possibility that another, later,
-      // main thread observer than XPCOMThreadWrapper adds a tail task after the
-      // tail dispatcher fired in XPCOMThreadWrapper::AfterProcessNextEvent.
-      // This assert prohibits that.
-      MOZ_ASSERT(!AbstractThread::GetCurrent()->HasTailTasksFor(this));
       // Stop MediaTrackGraph threads.
       mLifecycleState = LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN;
       nsCOMPtr<nsIRunnable> event = new MediaTrackGraphShutDownRunnable(this);

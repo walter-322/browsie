@@ -1888,36 +1888,6 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
 
   if (GetBrowsingContext()->IsTopContent() &&
       !mDocumentPrincipal->SchemeIs("about")) {
-    // Record the mixed content status of the docshell in Telemetry
-    enum {
-      NO_MIXED_CONTENT = 0,  // There is no Mixed Content on the page
-      MIXED_DISPLAY_CONTENT =
-          1,  // The page attempted to load Mixed Display Content
-      MIXED_ACTIVE_CONTENT =
-          2,  // The page attempted to load Mixed Active Content
-      MIXED_DISPLAY_AND_ACTIVE_CONTENT = 3  // The page attempted to load Mixed
-                                            // Display & Mixed Active Content
-    };
-
-    bool hasMixedDisplay =
-        mSecurityState &
-        (nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT |
-         nsIWebProgressListener::STATE_BLOCKED_MIXED_DISPLAY_CONTENT);
-    bool hasMixedActive =
-        mSecurityState &
-        (nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT |
-         nsIWebProgressListener::STATE_BLOCKED_MIXED_ACTIVE_CONTENT);
-
-    uint32_t mixedContentLevel = NO_MIXED_CONTENT;
-    if (hasMixedDisplay && hasMixedActive) {
-      mixedContentLevel = MIXED_DISPLAY_AND_ACTIVE_CONTENT;
-    } else if (hasMixedActive) {
-      mixedContentLevel = MIXED_ACTIVE_CONTENT;
-    } else if (hasMixedDisplay) {
-      mixedContentLevel = MIXED_DISPLAY_CONTENT;
-    }
-    glean::mixed_content::page_load.AccumulateSingleSample(mixedContentLevel);
-
     if (GetDocTreeHadMedia()) {
       glean::media::element_in_page_count.Add(1);
     }

@@ -120,7 +120,10 @@ const SMARTBLOCK_EMBED_INFO = [
     displayName: "TikTok",
   },
   {
-    matchPatterns: ["https://platform.twitter.com/*"],
+    matchPatterns: [
+      "https://platform.twitter.com/*",
+      "https://platform.x.com/*",
+    ],
     shimId: "TwitterEmbed",
     displayName: "X",
   },
@@ -354,6 +357,10 @@ class TrustPanel {
   }
 
   async showPopup(opts = {}) {
+    // Avoid flicker between the mouseup and panel shown by manually
+    // setting open attribute.
+    this.#anchor()?.setAttribute("open", "true");
+
     this.#initializePopup();
 
     // Kick off background determination of QWAC status.
@@ -2032,6 +2039,9 @@ class TrustPanel {
 
   onPopupHidden() {
     window.removeEventListener("focus", this, true);
+    for (let id of ["trust-icon-container", "identity-icon-box"]) {
+      document.getElementById(id)?.removeAttribute("open");
+    }
   }
 
   /**

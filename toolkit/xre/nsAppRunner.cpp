@@ -3096,7 +3096,7 @@ static ReturnAbortOnError ShowProfileDialog(
       }
       nsCOMPtr<mozIDOMWindowProxy> newWindow;
       rv = windowWatcher->OpenWindow(nullptr, nsDependentCString(aDialogURL),
-                                     "_blank"_ns, features, ioParamBlock,
+                                     u"_blank"_ns, features, ioParamBlock,
                                      getter_AddRefs(newWindow));
 
       NS_ENSURE_SUCCESS_LOG(rv, rv);
@@ -3604,7 +3604,7 @@ static ReturnAbortOnError HandleDetectedDowngrade(
       }
       nsCOMPtr<mozIDOMWindowProxy> newWindow;
       rv = windowWatcher->OpenWindow(
-          nullptr, nsDependentCString(kProfileDowngradeURL), "_blank"_ns,
+          nullptr, nsDependentCString(kProfileDowngradeURL), u"_blank"_ns,
           features, paramBlock, getter_AddRefs(newWindow));
       NS_ENSURE_SUCCESS(rv, rv);
 

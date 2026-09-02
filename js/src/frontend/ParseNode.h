@@ -1449,8 +1449,6 @@ class ListNode : public ParseNode {
 
     bool operator==(const iterator& other) const = default;
 
-    bool operator!=(const iterator& other) const = default;
-
     iterator& operator++() {
       node_ = node_->pn_next;
       return *this;

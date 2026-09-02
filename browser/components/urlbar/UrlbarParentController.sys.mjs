@@ -444,7 +444,10 @@ export class UrlbarParentController {
    */
   recordEngagement(wire) {
     this.engagementEvent.recordFromChild(
-      lazy.UrlbarTelemetryUtils.recordedEngagementFromWire(wire)
+      lazy.UrlbarTelemetryUtils.recordedEngagementFromWire(
+        wire,
+        this.liveResults
+      )
     );
   }
 
@@ -867,9 +870,8 @@ export class UrlbarParentController {
   }
 
   /**
-   * Returns the icon URL of the engine with the given id. This can be a blob
-   * URL, which only resolves in this process, so UrlbarParent serializes it
-   * before handing it to another process.
+   * Returns the icon URL of the engine with the given id, in a form the view
+   * can load.
    *
    * @param {string} engineId
    * @returns {Promise<?string>}
@@ -881,7 +883,7 @@ export class UrlbarParentController {
       lazy.logger.warn(`No engine found for id ${engineId}`);
       return null;
     }
-    return (await engine.getIconURL()) ?? null;
+    return (await lazy.UrlbarUtils.getEngineIconUrl(engine, this)) ?? null;
   }
 
   /**
@@ -1281,6 +1283,16 @@ export class UrlbarParentController {
   }
 
   /**
+   * The last query's results, which are the authoritative objects a result
+   * reconstructed from the wire resolves back to. See `UrlbarResult.fromWire()`.
+   *
+   * @type {UrlbarResult[]}
+   */
+  get liveResults() {
+    return this._lastQueryContextWrapper?.queryContext.results ?? [];
+  }
+
+  /**
    * Notifies listeners of results, by dispatching through the paired
    * UrlbarChildController, which owns the listeners.
    *
@@ -1623,7 +1635,6 @@ export class TelemetryEvent {
       // `#internalRecord()`.)
       if (!details.isSessionOngoing) {
         this._startEventInfo = null;
-        this._discarded = false;
       }
     }
   }
@@ -1774,7 +1785,8 @@ export class TelemetryEvent {
    * @param {string} data.searchSource
    *   The search source.
    * @param {object} data.internalDetails
-   *   The interaction details (picked result reconstructed; event/element null).
+   *   The interaction details; `event` and `element` are null on the message
+   *   path.
    * @param {?object[]} data.exposures
    *   The resolved exposure list, or null when the session stays open.
    * @param {?UrlbarResult[]} data.visibleResults
@@ -1811,27 +1823,6 @@ export class TelemetryEvent {
       // this engagement or abandonment (the candidate was built content-side).
       if (disableBuilt) {
         this.startTrackingDisableSuggest(disableBuilt, searchSource);
-      }
-
-      // On the message path internalDetails.result was reconstructed from
-      // structured clone, which strips data that doesn't survive it (e.g. a Rust
-      // suggestion's UniFFI class) and yields an object distinct from the
-      // parent's authoritative result. Resolve it back to the live result by id
-      // so provider engagement handling -- notably dismissal against the Rust
-      // store -- operates on the live object, and carry the view-assigned
-      // rowIndex the wire preserves so the selection ping's position is right
-      // (the live result never went through a view). visibleResults stay as the
-      // wire results; the impression/abandonment hooks match them by id.
-      // TODO(bug 2055935): remove this or bake the resolution into the actor
-      // result deserialization.
-      let liveResult = queryContext?.results?.find(
-        r => r.id === internalDetails.result?.id
-      );
-      if (liveResult) {
-        if (internalDetails.result.rowIndex != null) {
-          liveResult.rowIndex = internalDetails.result.rowIndex;
-        }
-        internalDetails.result = liveResult;
       }
 
       this._controller.manager.notifyEngagementChange(
@@ -2244,7 +2235,6 @@ export class TelemetryEvent {
   discard() {
     if (this._startEventInfo) {
       this._startEventInfo = null;
-      this._discarded = true;
     }
   }
 

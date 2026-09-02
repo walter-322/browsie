@@ -365,6 +365,7 @@ void Realm::purge() {
   newProxyCache.purge();
   newPlainObjectWithPropsCache.purge();
   plainObjectAssignCache.purge();
+  plainObjectSpreadCache.purge();
   objects_.iteratorCache.clearAndCompact();
 }
 

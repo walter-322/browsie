@@ -13,6 +13,8 @@ skip-if = ["debug"]
 
 ["browser_blur.js"]
 
+["browser_engineIcon.js"]
+
 ["browser_escape.js"]
 
 ["browser_pickResult.js"]
@@ -24,5 +26,12 @@ skip-if = ["debug"]
 ["browser_resultMenu.js"]
 
 ["browser_searchModeSwitcher.js"]
+
+["browser_searchTelemetry.js"]
+support-files = [
+  "../../../search/test/browser/telemetry/searchTelemetry.html",
+  "../../../search/test/browser/telemetry/searchTelemetryAd.html",
+  "../../../search/test/browser/telemetry/serp.css",
+]
 
 ["browser_viewBounds.js"]

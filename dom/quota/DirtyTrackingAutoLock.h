@@ -25,17 +25,13 @@ class OriginInfo;
 // on destruction. In addition, on construction it eagerly writes the dirty
 // flag to the storage database so that a crash mid-operation leaves the
 // origin marked as needing a full metadata resync on next startup.
-//
-// The mutex is held throughout the entire lifetime of this object, including
-// during the eager disk write. FlushDirtyOriginInfos uses TryLock to avoid
-// deadlocking with this path.
 class MOZ_RAII MOZ_SCOPED_CAPABILITY MOZ_CAPABILITY("dirty_tracking_autolock")
     DirtyTrackingAutoLock {
  public:
   // RAII helper that temporarily releases the quota mutex held by a
-  // DirtyTrackingAutoLock. Used by the eviction path in LockedMaybeUpdateSize
-  // to release the lock during blocking I/O. The mutex is re-acquired when
-  // the PauseLock is destroyed.
+  // DirtyTrackingAutoLock, allowing file I/O to proceed without holding
+  // the lock. The mutex is re-acquired when the PauseLock is destroyed.
+  // Analogous to MutexAutoUnlock.
   class MOZ_RAII MOZ_SCOPED_CAPABILITY PauseLock {
    public:
     explicit PauseLock(DirtyTrackingAutoLock& aAutoLock)

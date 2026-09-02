@@ -152,6 +152,7 @@ mozglue/baseprofiler/core/vtune/
 mozglue/misc/decimal/
 mozglue/static/lz4/
 mozglue/tests/glibc_printf_tests/
+mozpkix/
 netwerk/sctp/src/
 netwerk/srtp/src/
 nsprpub/
@@ -209,6 +210,7 @@ toolkit/modules/third_party/
 tools/fuzzing/libfuzzer/
 tools/lint/eslint/eslint-plugin-sdl-vendored/vendor/
 tools/profiler/core/vtune/
+unicode/
 xpcom/build/mach_override.c
 xpcom/build/mach_override.h
 xpcom/io/crc32c.c

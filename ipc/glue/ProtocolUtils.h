@@ -109,7 +109,6 @@ struct EndpointProcInfo {
   GeckoChildID mChildID = kInvalidGeckoChildID;
 
   bool operator==(const EndpointProcInfo& aOther) const = default;
-  bool operator!=(const EndpointProcInfo& aOther) const = default;
 
   static EndpointProcInfo Invalid() { return {}; }
   static EndpointProcInfo Current();

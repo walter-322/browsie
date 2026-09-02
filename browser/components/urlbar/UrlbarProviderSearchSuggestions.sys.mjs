@@ -553,7 +553,7 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
               description: entry.description || undefined,
               query,
               icon: !entry.value
-                ? await engine.getIconURL()
+                ? await UrlbarUtils.getEngineIconUrl(engine, controller)
                 : UrlbarUtils.getRemoteIconUrl(
                     entry.icon,
                     UrlbarProviderSearchSuggestions.RICH_ICON_SIZE,

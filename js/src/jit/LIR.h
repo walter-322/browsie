@@ -178,8 +178,6 @@ class LAllocation {
 
   bool operator==(const LAllocation& other) const = default;
 
-  bool operator!=(const LAllocation& other) const = default;
-
   HashNumber hash() const { return bits_; }
 
   uintptr_t asRawBits() const { return bits_; }

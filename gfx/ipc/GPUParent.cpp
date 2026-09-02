@@ -5,6 +5,7 @@
 #ifdef XP_WIN
 #  include "WMF.h"
 #  include "WMFDecoderModule.h"
+#  include "WMFEncoderModule.h"
 #endif
 #include "FFVPXRuntimeLinker.h"
 #include "GLContextProvider.h"
@@ -516,6 +517,7 @@ mozilla::ipc::IPCResult GPUParent::RecvUpdateVar(
           []() {
 #ifdef XP_WIN
             WMFDecoderModule::Init();
+            WMFEncoderModule::ClearCache();
 #endif
             if (StaticPrefs::media_ffvpx_hw_enabled()) {
               FFVPXRuntimeLinker::Init();

@@ -193,8 +193,6 @@ support-files = ["searchTelemetry.html", "searchTelemetryAd.html", "serp.css"]
 ["browser_search_telemetry_remote_settings_sync.js"]
 support-files = ["searchTelemetryAd.html", "serp.css"]
 
-["browser_search_telemetry_sap_newtab_searchbar.js"]
-
 ["browser_search_telemetry_searchbar.js"]
 https_first_disabled = true
 support-files = [

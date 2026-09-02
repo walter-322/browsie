@@ -181,6 +181,12 @@ EditContext::EditContext(nsIGlobalObject* aGlobalObject,
   // For computing target ranges for backspace, etc.,
   // we shouldn't treat consecutive spaces as collapsed.
   mTextContainer->Style()->SetProperty("white-space"_ns, "pre"_ns, ""_ns, aRv);
+  // Document-level anonymous content (created with InsertAnonymousContent)
+  // all lives in the same container. So we need to set position: absolute
+  // on all of them to prevent them from being positioned relative to
+  // each other.
+  mTextContainer->Style()->SetProperty("position"_ns, "absolute"_ns, ""_ns,
+                                       aRv);
   mSelectionStart = aInit.mSelectionStart;
   mSelectionEnd = aInit.mSelectionEnd;
   UpdateTextInternal(0, 0, aInit.mText, aRv);

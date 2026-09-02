@@ -3297,6 +3297,13 @@ class Settings(
             default = { FxNimbus.features.voiceSearchInDisplayMode.value().enabled },
         )
 
+    /** Whether the current URL should be shown separate from the addressbar when tapped. */
+    var showAddressBarInFocusMode by
+        booleanPreference(
+            key = appContext.getPreferenceKey(R.string.pref_key_toolbar_focus_mode),
+            default = { FxNimbus.features.addressbarFocusMode.value().enabled },
+        )
+
     /** Whether Longfox is enabled. */
     var longfoxEnabled by
         booleanPreference(

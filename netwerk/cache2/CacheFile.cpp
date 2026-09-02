@@ -2561,12 +2561,13 @@ void CacheFile::SetError(nsresult aStatus) {
 void CacheFile::SetupEncryption() {
   AssertOwnsLock();
 
-  // Only brand-new, disk-backed entries with no data yet are marked: this fixes
-  // an entry's encryption state at creation and never flips an existing
+  // Only brand-new, disk-backed entries with nothing on disk yet are marked:
+  // An entry's encryption state is fixed at creation and never flips a
   // plaintext entry. Existing entries read from disk carry their flag in the
   // metadata header. The cipher uses a per-block random nonce and a per-block
   // derived key, so no per-entry key material needs to be generated here.
-  if (mMemoryOnly || !mMetadata || mMetadata->IsEncrypted() || mDataSize != 0) {
+  if (mMemoryOnly || !mMetadata || mMetadata->IsEncrypted() ||
+      mMetadata->Offset() != 0) {
     return;
   }
 

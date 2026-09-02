@@ -883,10 +883,17 @@ export class UrlbarInputBaseTestUtils {
     // for the current query. For now let's just wait for the search to be
     // complete.
     return this.promiseSearchComplete(win).then(context => {
-      // Look for search suggestions.
-      let firstSearchSuggestionIndex = context.results.findIndex(
-        r => r.type == UrlbarShared.RESULT_TYPE.SEARCH && r.payload.suggestion
-      );
+      // Look for search suggestions. For a urlbar in a content process, a
+      // callback another realm's `findIndex` invokes gets its results
+      // Xray-wrapped, and an Xray over a class instance reads every property as
+      // undefined.
+      let firstSearchSuggestionIndex = context.results.findIndex(result => {
+        result = Cu.waiveXrays(result);
+        return (
+          result.type == UrlbarShared.RESULT_TYPE.SEARCH &&
+          result.payload.suggestion
+        );
+      });
       if (firstSearchSuggestionIndex == -1) {
         throw new Error("Cannot find a search suggestion");
       }

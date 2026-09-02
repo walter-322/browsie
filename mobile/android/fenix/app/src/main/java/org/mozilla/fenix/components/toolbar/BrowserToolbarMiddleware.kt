@@ -419,7 +419,7 @@ class BrowserToolbarMiddleware(
                         )
                     )
                 } else {
-                    if (!FxNimbus.features.addressbarFocusMode.value().enabled) {
+                    if (!settings.showAddressBarInFocusMode) {
                         store.dispatch(SearchQueryUpdated(BrowserToolbarQuery(searchTerms), true))
                     }
                     appStore.dispatch(SearchStarted(selectedTab.id))

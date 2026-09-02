@@ -202,7 +202,6 @@ struct MapSorterIt {
   storage_type* ptr;
   MapSorterIt(storage_type* ptr) : ptr(ptr) {}
   bool operator==(const MapSorterIt& other) const = default;
-  bool operator!=(const MapSorterIt& other) const = default;
   MapSorterIt& operator++() {
     ++ptr;
     return *this;

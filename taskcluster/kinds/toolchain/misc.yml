@@ -235,6 +235,42 @@ macosx64-xz:
             - macosx64-clang-toolchain
             - macosx64-sdk-toolchain
 
+macosx64-aarch64-xz:
+    description: "xz development library"
+    worker-type: b-osx-arm64
+    treeherder:
+        symbol: TMA64(xz)
+    worker:
+        max-run-time: 30000
+    use-python: system  # dependency of taskcluster python
+    run:
+        script: build-xz.sh
+        toolchain-artifact: public/build/xz.tar.zst
+    fetches:
+        fetch:
+            - xz
+        toolchain:
+            - macosx64-aarch64-clang
+            - macosx64-sdk-toolchain
+
+macosx64-aarch64-openssl:
+    description: "openssl development library"
+    worker-type: b-osx-arm64
+    treeherder:
+        symbol: TMA64(openssl)
+    worker:
+        max-run-time: 30000
+    use-python: system  # dependency of taskcluster python
+    run:
+        script: build-openssl.sh
+        toolchain-artifact: public/build/openssl.tar.zst
+    fetches:
+        fetch:
+            - openssl-1.1.1w
+        toolchain:
+            - macosx64-aarch64-clang
+            - macosx64-sdk-toolchain
+
 browsertime:
     description: "npm install browsertime node_modules"
     treeherder:

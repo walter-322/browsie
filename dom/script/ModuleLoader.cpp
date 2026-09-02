@@ -34,6 +34,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/RequestBinding.h"
 #include "nsContentSecurityManager.h"
+#include "nsContentSecurityUtils.h"
 #include "nsError.h"
 #include "nsIContent.h"
 #include "nsIPrincipal.h"
@@ -105,6 +106,18 @@ void ModuleLoader::DisallowImportMapsForModuleFetch(
   }
 }
 
+// Skip module CORS checks for resource: principals loading trusted schemes.
+// Other URI security checks still apply.
+static bool IsResourceDocumentLoadingTrustedURI(ModuleLoadRequest* aRequest) {
+  nsIPrincipal* triggeringPrincipal = aRequest->TriggeringPrincipal();
+  if (!triggeringPrincipal->GetIsContentPrincipal() ||
+      !triggeringPrincipal->SchemeIs("resource")) {
+    return false;
+  }
+
+  return nsContentSecurityUtils::IsTrustedScheme(aRequest->URI());
+}
+
 nsresult ModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
   if (aRequest->IsRetrievedFromMemoryCache()) {
     DisallowImportMapsForModuleFetch(aRequest);
@@ -113,14 +126,15 @@ nsresult ModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
     return aRequest->OnFetchComplete(NS_OK);
   }
 
-  // According to the spec, module scripts have different behaviour to classic
-  // scripts and always use CORS. Only exception: Non linkable about: pages
-  // which load local module scripts.
-  bool isAboutPageLoadingChromeURI = ScriptLoader::IsAboutPageLoadingChromeURI(
-      aRequest, GetScriptLoader()->GetDocument());
+  // Module scripts normally require CORS. Disable it for non-linkable about:
+  // pages loading chrome: URLs and resource: principals loading trusted
+  // schemes.
+  bool skipCORSChecks = ScriptLoader::IsAboutPageLoadingChromeURI(
+                            aRequest, GetScriptLoader()->GetDocument()) ||
+                        IsResourceDocumentLoadingTrustedURI(aRequest);
 
   nsContentSecurityManager::CORSSecurityMapping corsMapping =
-      isAboutPageLoadingChromeURI
+      skipCORSChecks
           ? nsContentSecurityManager::CORSSecurityMapping::DISABLE_CORS_CHECKS
           : nsContentSecurityManager::CORSSecurityMapping::REQUIRE_CORS_CHECKS;
 

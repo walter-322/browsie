@@ -1166,7 +1166,6 @@ struct sRGBColor {
   }
 
   bool operator==(const sRGBColor& aColor) const = default;
-  bool operator!=(const sRGBColor& aColor) const = default;
 
   Float r, g, b, a;
 };
@@ -1233,7 +1232,6 @@ struct DeviceColor {
   }
 
   bool operator==(const DeviceColor& aColor) const = default;
-  bool operator!=(const DeviceColor& aColor) const = default;
 
   friend std::ostream& operator<<(std::ostream& aOut,
                                   const DeviceColor& aColor);

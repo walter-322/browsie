@@ -64,7 +64,6 @@ import org.mozilla.fenix.components.usecases.ShareUseCases
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.telemetryName
-import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.search.SearchFragmentAction.CopyCurrentWebsiteDetailsClicked
 import org.mozilla.fenix.search.SearchFragmentAction.EditCurrentWebsiteDetailsClicked
 import org.mozilla.fenix.search.SearchFragmentAction.Init
@@ -281,7 +280,7 @@ class FenixSearchMiddleware(
                 currentTabData?.url != query && query.isNotBlank()
             }
         val shouldShowCurrentWebsiteDetails =
-            FxNimbus.features.addressbarFocusMode.value().enabled &&
+            settings.showAddressBarInFocusMode &&
                 query.isBlank() &&
                 appStore.state.searchState.sourceTabId?.let { browserStore.state.findTab(it) } != null
         val shouldShowSuggestions =

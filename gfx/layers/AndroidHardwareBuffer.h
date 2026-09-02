@@ -67,6 +67,8 @@ class AndroidHardwareBuffer
 
   UniqueFileHandle GetAndResetAcquireFence();
 
+  UniqueFileHandle GetAndResetAllFencesMerged();
+
   UniqueFileHandle GetAcquireFence() const;
 
   const gfx::IntSize mSize;
@@ -77,6 +79,9 @@ class AndroidHardwareBuffer
  protected:
   AndroidHardwareBuffer(AHardwareBuffer* aNativeBuffer, gfx::IntSize aSize,
                         uint32_t aStride, gfx::SurfaceFormat aFormat);
+
+  static UniqueFileHandle MergeFences(UniqueFileHandle&& aFence1,
+                                      UniqueFileHandle&& aFence2);
 
   AHardwareBuffer* mNativeBuffer;
 

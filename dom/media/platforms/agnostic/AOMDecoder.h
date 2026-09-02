@@ -144,7 +144,6 @@ class AOMDecoder final : public MediaDataDecoder,
     uint8_t mTier = 0;
 
     bool operator==(const OperatingPoint& aOther) const = default;
-    bool operator!=(const OperatingPoint& aOther) const = default;
   };
 
   struct AV1SequenceInfo {

@@ -20,6 +20,9 @@ import mozilla.components.feature.addons.amo.AMOAddonsProvider
 import mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker
 import mozilla.components.feature.addons.update.DefaultAddonUpdater
 import mozilla.components.feature.autofill.AutofillConfiguration
+import mozilla.components.feature.listentopage.ListenState
+import mozilla.components.feature.listentopage.ListenStore
+import mozilla.components.feature.listentopage.listenReducer
 import mozilla.components.feature.summarize.PageSummaryFeature
 import mozilla.components.feature.summarize.settings.SummarizationSettings
 import mozilla.components.lib.ai.controls.AIFeatureBlockStorage
@@ -469,6 +472,10 @@ class Components(
 
     val summarizationSettings: SummarizationSettings by lazyMonitored {
         SummarizationSettings.dataStore(context)
+    }
+
+    val listenStore: ListenStore by lazyMonitored {
+        ListenStore(initialState = ListenState(), reducer = ::listenReducer)
     }
 
     val aiFeatureRegistry by lazyMonitored {

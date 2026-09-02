@@ -478,7 +478,7 @@ class TextPropertyEditor {
     );
 
     if (gridFront) {
-      const gridFragments = gridFront.gridFragments;
+      const gridFragments = await gridFront.getFragments();
 
       for (const gridFragment of gridFragments) {
         for (const rowLine of gridFragment.rows.lines) {

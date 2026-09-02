@@ -83,6 +83,22 @@ macosx64-python-3.9:
             - macosx64-sdk-toolchain
             - macosx64-xz
 
+macosx64-aarch64-python-3.9:
+    treeherder:
+        symbol: TMA64(python)
+    worker-type: b-osx-arm64
+    run:
+        toolchain-alias: macosx64-aarch64-python
+        toolchain-artifact: public/build/python.tar.zst
+    fetches:
+        fetch:
+            - cpython-3.9.13
+        toolchain:
+            - macosx64-aarch64-clang
+            - macosx64-sdk-toolchain
+            - macosx64-aarch64-xz
+            - macosx64-aarch64-openssl
+
 ###
 
 linux64-python-3.11:
@@ -122,3 +138,18 @@ macosx64-python-3.11:
             - macosx64-clang-toolchain
             - macosx64-sdk-toolchain
             - macosx64-xz
+
+macosx64-aarch64-python-3.11:
+    treeherder:
+        symbol: TMA64(python3.11)
+    worker-type: b-osx-arm64
+    run:
+        toolchain-artifact: public/build/python.tar.zst
+    fetches:
+        fetch:
+            - cpython-3.11.7
+        toolchain:
+            - macosx64-aarch64-clang
+            - macosx64-sdk-toolchain
+            - macosx64-aarch64-xz
+            - macosx64-aarch64-openssl

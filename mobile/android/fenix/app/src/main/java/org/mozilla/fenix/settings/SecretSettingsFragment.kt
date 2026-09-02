@@ -530,6 +530,12 @@ class SecretSettingsFragment : PreferenceFragmentCompat(), SystemInsetsPaddedFra
             isChecked = context.components.settings.showVoiceSearchInDisplayToolbar
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
+
+        requirePreference<SwitchPreferenceCompat>(R.string.pref_key_toolbar_focus_mode).apply {
+            isVisible = Config.channel.isNightlyOrDebug
+            isChecked = context.components.settings.showAddressBarInFocusMode
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
     }
 
     override fun onDisplayPreferenceDialog(preference: Preference) {

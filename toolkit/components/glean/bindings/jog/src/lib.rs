@@ -6,7 +6,6 @@ use firefox_on_glean::factory;
 use firefox_on_glean::private::traits::HistogramType;
 use firefox_on_glean::private::{CommonMetricData, Lifetime, MemoryUnit, TimeUnit};
 use nserror::{nsresult, NS_ERROR_FAILURE, NS_OK};
-#[cfg(feature = "with_gecko")]
 use nsstring::{nsACString, nsAString, nsCString};
 use serde::Deserialize;
 use std::borrow::Cow;

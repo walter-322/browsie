@@ -47,10 +47,15 @@ void DirtyTrackingAutoLock::EagerMarkAsDirty() {
 
   auto stateMetadata = mOriginInfo->LockedFlattenToOriginStateMetadata();
   stateMetadata.mDirty = true;
+  // The lock was acquired to set the dirty flag and timestamp above.
+  // Release it for the disk write that persists the flag, then re-acquire
+  // in RAII manner so the caller can proceed with the actual metadata
+  // modifications.
+  PauseLock pausedLock(*this);
 
   auto* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
-  quotaManager->AssertCurrentThreadOwnsQuotaMutex();
+  quotaManager->AssertNotCurrentThreadOwnsQuotaMutex();
 
   quotaManager->FlagOriginInfoAsDirtyOnDisk(*this, stateMetadata);
 }

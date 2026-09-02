@@ -1378,7 +1378,11 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
         responseHead == &cleanedUpResponseHead ||
             responseHead == chan->GetResponseHead(),
         "mResponseHead changed between GetResponseHead and copy");
-    nsHttpResponseHead newResponseHead = *responseHead;
+    // The channel keeps its own head; the local one can be moved.
+    nsHttpResponseHead newResponseHead =
+        responseHead == &cleanedUpResponseHead
+            ? std::move(cleanedUpResponseHead)
+            : nsHttpResponseHead(*responseHead);
     if (!mBgParent->OnStartRequest(
             std::move(newResponseHead), useResponseHead,
             cleanedUpRequest ? cleanedUpRequestHeaders : requestHead->Headers(),
@@ -1955,7 +1959,9 @@ HttpChannelParent::StartRedirect(nsIChannel* newChannel, uint32_t redirectFlags,
   }
 
   if (!mIPCClosed) {
-    cleanedUpResponseHead = *responseHead;
+    if (responseHead != &cleanedUpResponseHead) {  // avoid self-assignment
+      cleanedUpResponseHead = *responseHead;
+    }
     if (!SendRedirect1Begin(mRedirectChannelId, newOriginalURI, newLoadFlags,
                             redirectFlags, loadInfoForwarderArg,
                             std::move(cleanedUpResponseHead), securityInfo,

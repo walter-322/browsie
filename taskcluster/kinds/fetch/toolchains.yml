@@ -738,6 +738,17 @@ symbol-scrapers:
         repo: https://github.com/mozilla/symbol-scrapers
         revision: 7070f9a4fa7a71413d84c80b3a53ae233e72ee55
 
+openssl-1.1.1w:
+    description: openssl 1.1.1w source code
+    fetch:
+        type: static-url
+        url: https://github.com/openssl/openssl/releases/download/OpenSSL_1_1_1w/openssl-1.1.1w.tar.gz
+        sha256: cf3098950cb4d853ad95c0841f1f9c6d3dc102dccfcacd521d93925208b76ac8
+        size: 9893384
+        artifact-name: openssl-source.tar.zst
+        strip-components: 1
+        add-prefix: openssl-source/
+
 xz:
     description: xz 5.8.3 source code
     fetch:

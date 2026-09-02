@@ -147,6 +147,36 @@ add_task(function test_recordedEngagement_roundtrip() {
   );
 });
 
+add_task(function test_recordedEngagement_resolves_live_results() {
+  let engagement = makeRecordedEngagement();
+  // The parent's own results, whose ids the wire carries.
+  let liveResults = engagement.visibleResults;
+  liveResults.forEach((result, i) => (result.id = i + 1));
+  let wire = structuredClone(toWire(engagement));
+  // The parent's results never went through a view, so they have no rowIndex.
+  liveResults.forEach(result => (result.rowIndex = undefined));
+
+  let restored = UrlbarTelemetryUtils.recordedEngagementFromWire(
+    wire,
+    liveResults
+  );
+
+  Assert.strictEqual(
+    restored.internalDetails.result,
+    liveResults[0],
+    "the picked result resolved to the parent's own result"
+  );
+  Assert.equal(
+    restored.internalDetails.result.rowIndex,
+    2,
+    "the wire's rowIndex carried over to it"
+  );
+  Assert.ok(
+    restored.visibleResults.every((result, i) => result === liveResults[i]),
+    "the visible results resolved to the parent's own results"
+  );
+});
+
 add_task(function test_recordFromChild_records_engagement() {
   Services.fog.testResetFOG();
   let controller = UrlbarTestUtils.newMockController();

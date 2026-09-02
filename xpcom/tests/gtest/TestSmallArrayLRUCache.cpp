@@ -16,7 +16,6 @@ struct Value {
   explicit Value(unsigned a) : m(a) {}
 
   bool operator==(const Value& aOther) const = default;
-  bool operator!=(const Value& aOther) const = default;
 
   unsigned m;
 };

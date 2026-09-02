@@ -454,7 +454,7 @@ tasks:
                         .*-artifact.*: []
                         .*-asan.*: []
                         .*-ccov.*: []
-                        macosx1[45].*64(-shippable)?(-qr)?/opt: ['mozilla-central']
+                        macosx1[45].*64(-shippable)?(-qr)?/opt: ['autoland', 'mozilla-central']
                         windows11.*-64.*(-shippable)?/opt: ['autoland', 'mozilla-central']
                         default: []
                 webrender-sw+urlbar-ipc:

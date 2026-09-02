@@ -95,7 +95,6 @@ struct EmbedderColorSchemes {
   PrefersColorSchemeOverride mPreferred{};
 
   bool operator==(const EmbedderColorSchemes& aOther) const = default;
-  bool operator!=(const EmbedderColorSchemes& aOther) const = default;
 };
 
 // Fields are, by default, settable by any process and readable by any process.

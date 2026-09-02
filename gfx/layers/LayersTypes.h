@@ -264,7 +264,6 @@ class CompositableHandle final {
   explicit operator bool() const { return IsValid(); }
   explicit operator uint64_t() const { return mHandle; }
   bool operator==(const CompositableHandle& aOther) const = default;
-  bool operator!=(const CompositableHandle& aOther) const = default;
   uint64_t Value() const { return mHandle; }
 
  private:

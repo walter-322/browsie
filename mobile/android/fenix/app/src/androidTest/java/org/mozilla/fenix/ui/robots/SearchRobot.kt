@@ -59,6 +59,7 @@ import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.Constants.SPEECH_RECOGNITION
 import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
+import org.mozilla.fenix.helpers.FeatureSettingsHelper.Companion.settings
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
@@ -68,7 +69,6 @@ import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.ext.waitNotNull
-import org.mozilla.fenix.nimbus.FxNimbus
 
 /** Implementation of Robot Pattern for the search fragment. */
 class SearchRobot(private val composeTestRule: ComposeTestRule) {
@@ -696,13 +696,13 @@ class SearchRobot(private val composeTestRule: ComposeTestRule) {
         Log.i(TAG, "verifyTypedToolbarText: Verifying that text '$expectedText' exists?: $exists")
         val normalizedExpectedText =
             normalizeWhitespace(expectedText).let {
-                when (FxNimbus.features.addressbarFocusMode.value().enabled) {
+                when (settings.showAddressBarInFocusMode) {
                     true -> URLStringUtils.toDisplayUrl(it).toString()
                     else -> it
                 }
             }
         val actualText =
-            when (FxNimbus.features.addressbarFocusMode.value().enabled) {
+            when (settings.showAddressBarInFocusMode) {
                 true ->
                     composeTestRule
                         .onNodeWithTag(CURRENT_URL_IN_SITE_DETAILS, true)

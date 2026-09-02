@@ -229,15 +229,6 @@ bool CanonicalQuotaObject::LockedMaybeUpdateSize(
   // We unlocked and relocked several times so we need to recompute all the
   // essential variables and recheck the group limit.
 
-  if (!originInfo->mGroupInfo) {
-    // During the pause, the origin got removed. We can skip updating the
-    // values of the in-memory representation because the origin is no
-    // longer in memory.
-    DirtyTrackingAutoLock::PauseLock pauseLock(aProofOfLock);
-    quotaManager->FinalizeOriginEviction(std::move(locks));
-    return false;
-  }
-
   QM_ASSERT_NO_UNDERFLOW(aSize, mSize);
   const uint64_t increase = aSize - mSize;
 

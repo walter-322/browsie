@@ -22,10 +22,12 @@ newtab.search:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2065246
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670#c3
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105#c11
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2065246
     data_sensitivity:
       - interaction
     notification_emails:
@@ -39,7 +41,8 @@ newtab.search:
       newtab_visit_id: &newtab_visit_id
         description: >
           The id of the newtab visit that originated the search.
-          Should always be present for handoff searches.
+          Should always be present for handoff searches and for searches from
+          the New Tab search bar.
           TODO(bug 1774597): for searches done without handoff (e.g. with
           `browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar`
           set to `false`), the active newtab visit id is unknown.
@@ -50,6 +53,7 @@ newtab.search:
           * `urlbar_handoff`
           * `about_home`
           * `about_newtab`
+          * `newtab_searchbar`
         type: string
       telemetry_id: &telemetry_id
         description: >
@@ -72,10 +76,12 @@ newtab.search.ad:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2065246
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670#c3
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105#c11
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2065246
     data_sensitivity:
       - interaction
     notification_emails:
@@ -109,10 +115,12 @@ newtab.search.ad:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2065246
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670#c3
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105#c11
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2065246
     data_sensitivity:
       - interaction
     notification_emails:

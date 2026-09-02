@@ -58,7 +58,6 @@ import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.home.toolbar.edgeToEdgeClipboardBarBackground
-import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.search.BrowserStoreToFenixSearchMapperMiddleware
 import org.mozilla.fenix.search.BrowserToolbarToFenixSearchMapperMiddleware
 import org.mozilla.fenix.search.FenixSearchMiddleware
@@ -80,8 +79,8 @@ private const val AWESOMEBAR_MAX_WIDTH = 600
  * Cap the width of the awesomebar content to [AcornWindowSize.Small] and center it in the available space as a staged
  * rollout change.
  */
-private fun Modifier.awesomeBarContentWidth() =
-    if (FxNimbus.features.addressbarFocusMode.value().enabled) {
+private fun Modifier.awesomeBarContentWidth(useAddressBarFocusMode: Boolean) =
+    if (useAddressBarFocusMode) {
         fillMaxWidth().wrapContentWidth(align = Alignment.CenterHorizontally).widthIn(max = AWESOMEBAR_MAX_WIDTH.dp)
     } else {
         fillMaxWidth()
@@ -160,6 +159,7 @@ class AwesomeBarComposable(
                 shouldUseEdgeToEdgeColors = isEdgeToEdgeBackgroundEnabled,
                 isPrivateMode = activity.browsingModeManager.mode == BrowsingMode.Private,
             )
+        val showCurrentTabData = remember { components.settings.showAddressBarInFocusMode }
         val view = LocalView.current
         val focusManager = LocalFocusManager.current
         val keyboardController = LocalSoftwareKeyboardController.current
@@ -178,7 +178,7 @@ class AwesomeBarComposable(
             val url = components.clipboardHandler.extractURL()
 
             ClipboardSuggestionBar(
-                modifier = Modifier.awesomeBarContentWidth(),
+                modifier = Modifier.awesomeBarContentWidth(showCurrentTabData),
                 shouldUseBottomToolbar = components.settings.shouldUseBottomToolbar,
                 backgroundColor = clipboardBarBackground,
                 onClick = {
@@ -194,7 +194,7 @@ class AwesomeBarComposable(
         if (isSearchActive) {
             if (state.showSearchSuggestionsHint) {
                 PrivateSuggestionsCard(
-                    modifier = Modifier.awesomeBarContentWidth(),
+                    modifier = Modifier.awesomeBarContentWidth(showCurrentTabData),
                     onSearchSuggestionsInPrivateModeAllowed = {
                         components.settings.shouldShowSearchSuggestionsInPrivate = true
                         components.settings.showSearchSuggestionsInPrivateOnboardingFinished = true
@@ -236,13 +236,13 @@ class AwesomeBarComposable(
                 ) {
                     val currentTabDetailsToShow =
                         remember(state.query.isBlank()) {
-                            when (state.query.isBlank() && FxNimbus.features.addressbarFocusMode.value().enabled) {
+                            when (state.query.isBlank() && showCurrentTabData) {
                                 true -> state.currentTabData
                                 else -> null
                             }
                         }
 
-                    Box(modifier = Modifier.awesomeBarContentWidth()) {
+                    Box(modifier = Modifier.awesomeBarContentWidth(showCurrentTabData)) {
                         AwesomeBar(
                             text = state.query,
                             currentTabData = currentTabDetailsToShow,
@@ -296,7 +296,7 @@ class AwesomeBarComposable(
             val url = components.clipboardHandler.extractURL()
 
             ClipboardSuggestionBar(
-                modifier = Modifier.awesomeBarContentWidth(),
+                modifier = Modifier.awesomeBarContentWidth(showCurrentTabData),
                 shouldUseBottomToolbar = components.settings.shouldUseBottomToolbar,
                 backgroundColor = clipboardBarBackground,
                 onClick = {

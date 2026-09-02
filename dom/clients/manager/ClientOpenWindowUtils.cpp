@@ -260,7 +260,7 @@ static Result<Ok, nsresult> OpenNewWindow(
 
   nsCOMPtr<mozIDOMWindowProxy> win;
   MOZ_TRY(ww->OpenWindow(nullptr, nsDependentCString(BROWSER_CHROME_URL_QUOTED),
-                         "_blank"_ns, features, args, getter_AddRefs(win)));
+                         u"_blank"_ns, features, args, getter_AddRefs(win)));
   return Ok();
 }
 

@@ -164,11 +164,15 @@ bool ForOfLoopControl::emitIteratorCloseForNonLocalExits(BytecodeEmitter* bce) {
   // https://arai-a.github.io/ecma262-compare/?pr=3000&id=sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset
   // Step 9.k.i. Set result to
   // Completion(DisposeResources(iterationEnv.[[DisposeCapability]], result)).
-  NonLocalIteratorCloseUsingEmitter disposeBeforeIterClose(bce);
-
-  if (!disposeBeforeIterClose.prepareForIteratorClose(currentScope)) {
-    //              [stack] EXC-DISPOSE? DISPOSE-THROWING? ITER
-    return false;
+  //
+  // Dispose the loop head's own resources if it has any.
+  mozilla::Maybe<NonLocalIteratorCloseUsingEmitter> disposeBeforeIterClose;
+  if (forOfDisposalEmitter_.isSome()) {
+    disposeBeforeIterClose.emplace(bce);
+    if (!disposeBeforeIterClose->prepareForIteratorClose(currentScope)) {
+      //            [stack] EXC-DISPOSE? DISPOSE-THROWING? ITER
+      return false;
+    }
   }
 
   if (!bce->emit1(JSOp::Dup)) {
@@ -181,9 +185,11 @@ bool ForOfLoopControl::emitIteratorCloseForNonLocalExits(BytecodeEmitter* bce) {
     return false;
   }
 
-  if (!disposeBeforeIterClose.emitEnd()) {
-    //              [stack] ITER
-    return false;
+  if (disposeBeforeIterClose.isSome()) {
+    if (!disposeBeforeIterClose->emitEnd()) {
+      //            [stack] ITER
+      return false;
+    }
   }
 
   if (!bce->emit1(JSOp::Pop)) {

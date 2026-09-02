@@ -475,14 +475,25 @@ ${
     // reflect value of keyword.enabled or set the searchbar placeholder.
     this._setPlaceholder(null);
 
-    if (this.controller.maybeInitEngineStore()) {
-      // Engine store is initialized now and placeholder with
-      // engine name will be set in #connectedCallback.
+    if (this.sapName != "newtab_searchbar") {
+      if (this.controller.maybeInitEngineStore()) {
+        // Engine store is initialized now and placeholder with
+        // engine name will be set in #connectedCallback.
+      } else {
+        // This happens on browser startup. We wait a bit before
+        // initializing the search service to improve startup times.
+        this.#initEngineStoreAfterPaint().then(
+          () => this.#deferUpdatePlaceholder(),
+          () => {} // Do nothing if search service failed.
+        );
+      }
     } else {
-      // This happens on browser startup. We wait a bit before
-      // initializing the search service to improve startup times.
-      this.#initEngineStoreAfterPaint().then(
-        () => this.#deferUpdatePlaceholder(),
+      // In newtab, we don't wait before initializing the search service.
+      // We also don't use #deferUpdatePlaceholder in newtab. This causes
+      // flicker but it should be less often because of newtab preloading
+      // and it allows us to never show the magnifying glass placeholder.
+      this.controller.engineStore.init().then(
+        () => this.searchModeSwitcher.updateSearchIcon(),
         () => {} // Do nothing if search service failed.
       );
     }

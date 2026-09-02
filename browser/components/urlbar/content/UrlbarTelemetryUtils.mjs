@@ -334,19 +334,23 @@ export class UrlbarTelemetryUtils {
    *
    * @param {object} wire
    *   The payload from `recordedEngagementToWire()`.
+   * @param {?UrlbarResult[]} [liveResults]
+   *   The parent's own results, which the shipped ones resolve back to. See
+   *   `UrlbarResult.fromWire()`.
    * @returns {object} The reconstructed data.
    */
-  static recordedEngagementFromWire(wire) {
+  static recordedEngagementFromWire(wire, liveResults = null) {
     return {
       ...wire,
       visibleResults:
-        wire.visibleResults?.map(r => UrlbarResult.fromWire(r)) ?? [],
+        wire.visibleResults?.map(r => UrlbarResult.fromWire(r, liveResults)) ??
+        [],
       internalDetails: {
         ...wire.internalDetails,
         event: null,
         element: null,
         result: wire.internalDetails.result
-          ? UrlbarResult.fromWire(wire.internalDetails.result)
+          ? UrlbarResult.fromWire(wire.internalDetails.result, liveResults)
           : null,
       },
     };

@@ -63,12 +63,7 @@ export class UrlbarChild extends JSWindowActorChild {
   // collected, so the parent can drop the controller it holds for it.
   #destroyRegistry = new FinalizationRegistry(instanceId => {
     this.#childControllers.delete(instanceId);
-    try {
-      this.sendAsyncMessage("Destroy", { instanceId });
-    } catch (ex) {
-      // The actor is already gone (e.g. the window global was torn down), so
-      // the parent's controllers went with it; nothing left to clean up.
-    }
+    this.#maybeSendAsyncMessage("Destroy", { instanceId });
   });
 
   /**
@@ -86,6 +81,46 @@ export class UrlbarChild extends JSWindowActorChild {
       !this.manager.parentActor ||
       lazy.UrlbarPrefs.get("ipc.chromeMessagePassing")
     );
+  }
+
+  /**
+   * Sends a message if the actor is not destroyed.
+   *
+   * @param {string} name
+   * @param {any} data
+   */
+  #maybeSendAsyncMessage(name, data) {
+    try {
+      this.sendAsyncMessage(name, data);
+    } catch (ex) {
+      if (ex.name == "InvalidStateError") {
+        // Actor was destroyed.
+        return;
+      }
+      throw ex;
+    }
+  }
+
+  /**
+   * Sends a query. If the actor is destroyed, the returned promise won't ever
+   * resolve.
+   *
+   * @param {string} name
+   * @param {any} data
+   * @returns {Promise<any>}
+   */
+  async #maybeSendQuery(name, data) {
+    try {
+      return await this.sendQuery(name, data);
+    } catch (ex) {
+      if (
+        ex.name == "InvalidStateError" || // Destroyed before the query was sent.
+        ex.name == "AbortError" // Destroyed while the query was in flight.
+      ) {
+        return new Promise(() => {});
+      }
+      throw ex;
+    }
   }
 
   /**
@@ -154,10 +189,10 @@ export class UrlbarChild extends JSWindowActorChild {
       ? Cu.waiveXrays(this.contentWindow)
       : this.contentWindow;
     let port = {
-      sendAsyncMessage: (name, data) => this.sendAsyncMessage(name, data),
+      sendAsyncMessage: (name, data) => this.#maybeSendAsyncMessage(name, data),
       sendQuery: (name, data) =>
         unprivileged
-          ? this.#wrapPromise(this.sendQuery(name, data), win)
+          ? this.#wrapPromise(this.#maybeSendQuery(name, data), win)
           : this.sendQuery(name, data),
       registerMessagePathInput: input => this.registerMessagePathInput(input),
       registerChildController: (instanceId, child) =>

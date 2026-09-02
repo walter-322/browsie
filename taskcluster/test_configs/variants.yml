@@ -733,8 +733,6 @@ urlbar-ipc:
     expiration: "2027-06-01"
     suffix: "uipc"
     mozinfo: "urlbar_ipc"
-    replace:
-        tier: 2
     merge:
         worker:
             env:

@@ -95,7 +95,6 @@ struct WindowStyles {
   static WindowStyles FromHWND(HWND);
 
   constexpr bool operator==(WindowStyles const& that) const = default;
-  constexpr bool operator!=(WindowStyles const& that) const = default;
 
   constexpr WindowStyles operator|(WindowStyles const& that) const {
     return WindowStyles{.style = style | that.style, .ex = ex | that.ex};

@@ -242,24 +242,36 @@ toolbar[inactive="true"] .urlbar,
   }
 }
 
-/* In a page, the element goes in the top layer anchored to the container it sits
-   in, which the embedder names. A chrome window's own bars are popovers too, and
-   the element lays out in flow until it is shown, hence both parts of the
-   selector. */
-.urlbar[in-page][breakout] {
-  width: 100%;
+/* In a page the bar takes its height from the embedder and is taller than in a
+   chrome window, leaving the buttons a uniform inset on all four sides. The
+   size derivation repeats the one on the root because that one runs where the
+   padding still has its chrome value. */
+.urlbar[in-page] {
+  --urlbar-input-container-padding: 10px;
+  --urlbar-basic-component-size: calc(var(--urlbar-height) - 2 * var(--urlbar-input-container-padding));
+  --urlbarview-border-radius: calc(var(--urlbar-height) / 2);
+  /* How far the open results panel reaches past the bar. */
+  --urlbar-background-inset-breakout: -8px;
 
-  &:popover-open {
-    /* The element takes the space below the input, bounded by a screenful so a
-       long page doesn't give it one, and by the page itself minus the room the
-       background needs past the border box (--urlbar-background-inset-breakout
-       is negative, hence the addition). */
-    position-anchor: --urlbar-anchor;
-    position-area: span-block-end center;
-    inset-block-start: 0;
-    max-height: min(calc(100% + var(--urlbar-background-inset-breakout)), 100vh);
-    display: flex;
-    flex-direction: column;
+  /* The element goes in the top layer anchored to the container it sits in,
+     which the embedder names. A chrome window's own bars are popovers too, and
+     the element lays out in flow until it is shown, hence both parts of the
+     selector. */
+  &[breakout] {
+    width: 100%;
+
+    &:popover-open {
+      /* The element takes the space below the input, bounded by a screenful so
+         a long page doesn't give it one, and by the page itself minus the room
+         the background needs past the border box
+         (--urlbar-background-inset-breakout is negative, hence the addition). */
+      position-anchor: --urlbar-anchor;
+      position-area: span-block-end center;
+      inset-block-start: 0;
+      max-height: min(calc(100% + var(--urlbar-background-inset-breakout)), 100vh);
+      display: flex;
+      flex-direction: column;
+    }
   }
 }
 
@@ -1426,6 +1438,7 @@ toolbar[inactive="true"] .urlbar,
 .searchmode-switcher-close {
   display: none;
   border: 0;
+  padding: 0;
   align-self: center;
 
   @media not -moz-pref("browser.urlbar.unifiedSearchButton.always") {

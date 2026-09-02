@@ -50,7 +50,6 @@ import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchStarte
 import org.mozilla.fenix.components.appstate.VoiceSearchAction.VoiceInputRequested
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.toolbar.ToolbarPosition.BOTTOM
-import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.wallpapers.Wallpaper
@@ -267,7 +266,7 @@ internal class HomeToolbarComposable(
     private fun handleTypedSearchRequest() {
         handleStartingSearch(directToSearchConfig)
 
-        if (directToSearchConfig.sessionId != null && !FxNimbus.features.addressbarFocusMode.value().enabled) {
+        if (directToSearchConfig.sessionId != null && !settings.showAddressBarInFocusMode) {
             browserStore.state.findTab(directToSearchConfig.sessionId)?.let {
                 toolbarStore.dispatch(
                     SearchQueryUpdated(

@@ -124,7 +124,8 @@ SharedSurface_AndroidHardwareBuffer::ToSurfaceDescriptor() {
 }
 
 void SharedSurface_AndroidHardwareBuffer::WaitForBufferOwnership() {
-  UniqueFileHandle fenceFd = mAndroidHardwareBuffer->GetAndResetReleaseFence();
+  UniqueFileHandle fenceFd =
+      mAndroidHardwareBuffer->GetAndResetAllFencesMerged();
   if (!fenceFd) {
     return;
   }

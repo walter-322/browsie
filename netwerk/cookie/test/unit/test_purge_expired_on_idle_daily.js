@@ -3,6 +3,10 @@
 
 "use strict";
 
+const { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
+);
+
 const HOST = "example.org";
 
 function addCookie(name, expiryInMSec) {
@@ -49,12 +53,16 @@ add_task(async function test_purge_expired_on_idle_daily() {
   );
 
   const nowInMSec = Date.now();
+  const expiryInMSec = nowInMSec + 2000;
   addCookie("live", nowInMSec + 24 * 60 * 60 * 1000);
-  addCookie("expiring", nowInMSec + 2000);
+  addCookie("expiring", expiryInMSec);
 
   Assert.deepEqual(cookieNames(), ["expiring", "live"], "Both cookies stored");
 
-  await new Promise(resolve => do_timeout(2500, resolve));
+  await TestUtils.waitForCondition(
+    () => Date.now() > expiryInMSec,
+    "the cookie reached its expiry time"
+  );
 
   // The size-based purge in AddCookie() only runs once we are well over the
   // cookie limit, so until idle-daily the expired cookie is still in the jar.

@@ -376,7 +376,7 @@ void gfxWindowsPlatform::InitPlatformHardwareVideoConfig() {
 }
 
 #ifdef MOZ_WMF_CDM
-void gfxWindowsPlatform::InitPlatformHardwarDRMConfig() {
+void gfxWindowsPlatform::InitPlatformHardwareDRMConfig() {
   nsCString message, failureId;
   FeatureState& featureHWDRM = gfxConfig::GetFeature(Feature::WMF_HW_DRM);
   featureHWDRM.Reset();

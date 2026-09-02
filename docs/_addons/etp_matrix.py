@@ -61,13 +61,13 @@ OTHER_PRIVACY_PREFS = {
             "Reset Private Browsing",
             "browser.privatebrowsing.resetPBM.enabled",
             None,
-            "Clears all private browsing mode data when last private window is closed.",
+            "Shows a toolbar button in private windows that restarts the private session, clearing all site data and closing all private tabs and windows.",
         ),
         (
             "Show Reset Confirmation",
             "browser.privatebrowsing.resetPBM.showConfirmationDialog",
             None,
-            "Shows confirmation dialog before clearing private browsing data on window close.",
+            "Shows a confirmation dialog before the private browsing session is restarted.",
         ),
     ],
     "Cookie Behavior": [
