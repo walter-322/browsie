@@ -1,75 +1,83 @@
-name: Build Browsie
+name: Build Corex Office (Windows)
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:   # run manually from the Actions tab
   push:
-    branches: [main]
+    branches: [ master ]
 
 jobs:
-  build:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            artifact-name: browsie-linux
-            artifact-path: obj-*/dist/*.tar.bz2
-          - os: windows-latest
-            artifact-name: browsie-windows
-            artifact-path: obj-*/dist/**/*.exe
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 350
+  build-windows:
+    runs-on: windows-2022
+    timeout-minutes: 600   # LibreOffice builds are long; adjust if needed
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Corex-Office
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
-      - name: Free up disk space (Linux only)
-        if: runner.os == 'Linux'
+      # GitHub's windows-2022 runners ship with WSL already available,
+      # but we make sure a distro is installed and set as default.
+      - name: Set up WSL (Ubuntu)
+        uses: Vampire/setup-wsl@v7
+        timeout-minutes: 15
+        with:
+          distribution: Ubuntu-22.04
+
+      - name: Install Linux-side build helpers inside WSL
+        shell: wsl-bash {0}
         run: |
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
-          sudo apt-get clean
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential autoconf automake libtool pkg-config \
+            git make zip unzip nasm python3 python3-pip
 
-      - name: Install MozillaBuild (Windows only)
-        if: runner.os == 'Windows'
+      # LibreOffice's Windows build expects Visual Studio 2022 with the
+      # "Desktop development with C++" workload. windows-2022 runners
+      # come with VS2022 Build Tools preinstalled.
+      - name: Verify MSVC toolchain is present
         shell: pwsh
         run: |
-          Invoke-WebRequest -Uri "https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe" -OutFile "MozillaBuildSetup.exe"
-          Start-Process -FilePath ".\MozillaBuildSetup.exe" -ArgumentList "/S" -Wait
+          & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -property installationPath
 
-      - name: Cache mozbuild toolchain
-        uses: actions/cache@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
-          path: ~/.mozbuild
-          key: mozbuild-${{ runner.os }}-v1
+          distribution: temurin
+          java-version: '17'
 
-      - name: Cache sccache
-        uses: actions/cache@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
         with:
-          path: ~/.cache/sccache
-          key: sccache-${{ runner.os }}-${{ github.sha }}
-          restore-keys: |
-            sccache-${{ runner.os }}-
+          python-version: '3.11'
 
-      - name: Bootstrap build deps
-        timeout-minutes: 60
-        shell: bash
+      # autogen.sh / configure need to run from within the WSL shell in
+      # "WSL as helper" mode, per LibreOffice's documented Windows build path.
+      - name: Configure build
+        shell: wsl-bash {0}
+        env:
+          WSLENV: ProgramFiles(x86)/p
         run: |
-          ./mach --no-interactive bootstrap --application-choice=browser 2>&1 | while IFS= read -r line; do
-            echo "$line"
-          done
+          cd $GITHUB_WORKSPACE
+          ./autogen.sh --with-distro=CorexOfficeWin64
 
-      - name: Build
-        run: ./mach build
+      - name: Build (this is the multi-hour step)
+        shell: wsl-bash {0}
+        env:
+          WSLENV: ProgramFiles(x86)/p
+        run: |
+          cd $GITHUB_WORKSPACE
+          make
 
-      - name: Package
-        run: ./mach package
-
-      - name: List package output (debug)
-        shell: bash
-        run: find obj-* -iname "*.exe" -o -iname "*.msi" -o -iname "*.zip" -o -iname "*.tar.bz2" 2>/dev/null || true
+      - name: Package build output as zip
+        shell: pwsh
+        run: |
+          $outDir = "instsetoo_native"
+          Compress-Archive -Path "$outDir\*" -DestinationPath "CorexOffice-windows.zip"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact-name }}
-          path: ${{ matrix.artifact-path }}
-          retention-days: 7
+          name: CorexOffice-windows
+          path: CorexOffice-windows.zip
+          retention-days: 14
