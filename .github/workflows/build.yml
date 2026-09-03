@@ -53,7 +53,7 @@ jobs:
         timeout-minutes: 60
         shell: bash
         run: |
-          ./mach --no-interactive bootstrap --application-choice=browser --vcs=git 2>&1 | while IFS= read -r line; do
+          ./mach --no-interactive bootstrap --application-choice=browser 2>&1 | while IFS= read -r line; do
             echo "$line"
           done
 
