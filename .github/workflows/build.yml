@@ -50,8 +50,12 @@ jobs:
             sccache-${{ runner.os }}-
 
       - name: Bootstrap build deps
-        timeout-minutes: 20
-        run: yes | ./mach --no-interactive bootstrap --application-choice=browser --vcs=git
+        timeout-minutes: 60
+        shell: bash
+        run: |
+          ./mach --no-interactive bootstrap --application-choice=browser --vcs=git 2>&1 | while IFS= read -r line; do
+            echo "$line"
+          done
 
       - name: Build
         run: ./mach build
