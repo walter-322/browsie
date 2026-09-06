@@ -63,9 +63,33 @@ jobs:
       - name: Package
         run: ./mach package
 
+      - name: Build installer (Windows only)
+        if: runner.os == 'Windows'
+        run: ./mach installer
+
+      - name: Bundle VC++ runtime DLLs (Windows safety net)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $dlls = @("MSVCP140.dll", "VCRUNTIME140.dll", "VCRUNTIME140_1.dll")
+          $sysDir = "C:\Windows\System32"
+          $destDir = (Get-ChildItem -Path "obj-*\dist" -Directory | Where-Object { $_.Name -eq "browsie" }).FullName
+          foreach ($dll in $dlls) {
+            if (Test-Path "$sysDir\$dll") {
+              Copy-Item -Path "$sysDir\$dll" -Destination $destDir -Force
+              Write-Host "Copied $dll"
+            } else {
+              Write-Host "WARNING: $dll not found in $sysDir"
+            }
+          }
+
       - name: List package output (debug)
         shell: bash
-        run: find obj-* -iname "*.exe" -o -iname "*.msi" -o -iname "*.zip" -o -iname "*.tar.bz2" 2>/dev/null || true
+        run: |
+          echo "--- All exe/msi/zip files ---"
+          find obj-* -iname "*.exe" -o -iname "*.msi" -o -iname "*.zip" -o -iname "*.tar.bz2" 2>/dev/null
+          echo "--- Specifically looking for installer ---"
+          find obj-* -ipath "*install*" -iname "*.exe" 2>/dev/null
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
