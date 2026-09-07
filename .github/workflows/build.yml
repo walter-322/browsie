@@ -65,7 +65,7 @@ jobs:
 
       - name: Build installer (Windows only)
         if: runner.os == 'Windows'
-        run: ./mach installer
+        run: ./mach build installer
 
       - name: Bundle VC++ runtime DLLs (Windows safety net)
         if: runner.os == 'Windows'
