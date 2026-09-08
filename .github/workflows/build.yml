@@ -65,8 +65,10 @@ jobs:
 
       - name: Build installer (Windows only)
         if: runner.os == 'Windows'
-        run: ./mach build installer
-
+        shell: bash
+        run: |
+          cd obj-browsie/browser/installer
+          "C:/Users/runneradmin/.mozbuild/mozmake/mozmake.exe" installer
       - name: Bundle VC++ runtime DLLs (Windows safety net)
         if: runner.os == 'Windows'
         shell: pwsh
