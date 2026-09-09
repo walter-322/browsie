@@ -63,7 +63,7 @@ jobs:
       - name: Package
         run: ./mach package
 
-<<<<<<< HEAD
+
       - name: Build installer (Windows only)
         if: runner.os == 'Windows'
         shell: bash
@@ -86,10 +86,6 @@ jobs:
               Write-Host "WARNING: $dll not found in $sysDir"
             }
           }
-
-=======
-
->>>>>>> e7a1469a637ec361cfbae67aa07e7e2e0dc23f13
       - name: List package output (debug)
         shell: bash
         run: |
