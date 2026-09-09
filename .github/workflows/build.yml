@@ -63,12 +63,14 @@ jobs:
       - name: Package
         run: ./mach package
 
+<<<<<<< HEAD
       - name: Build installer (Windows only)
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          cd obj-browsie/browser/installer
+          cd obj-browsie
           "C:/Users/runneradmin/.mozbuild/mozmake/mozmake.exe" installer
+
       - name: Bundle VC++ runtime DLLs (Windows safety net)
         if: runner.os == 'Windows'
         shell: pwsh
@@ -85,6 +87,9 @@ jobs:
             }
           }
 
+=======
+
+>>>>>>> e7a1469a637ec361cfbae67aa07e7e2e0dc23f13
       - name: List package output (debug)
         shell: bash
         run: |
